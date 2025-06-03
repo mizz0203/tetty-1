@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테트리스 & 탱크 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .game-container {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .menu {
+            display: block;
+        }
+        
+        .game-screen {
+            display: none;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .menu-button {
+            display: block;
+            width: 300px;
+            padding: 20px;
+            margin: 20px auto;
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .menu-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .menu-button.tank {
+            background: linear-gradient(45deg, #4ecdc4, #6ed5d0);
+        }
+        
+        .back-button {
+            padding: 10px 20px;
+            margin: 20px;
+            background: linear-gradient(45deg, #95a5a6, #bdc3c7);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        canvas {
+            border: 3px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: #000;
+        }
+        
+        .game-info {
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px auto;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            transition: width 0.3s ease;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 메뉴 화면 -->
+        <div class="menu" id="menu">
+            <h1>🎮 게임 선택</h1>
+            <button class="menu-button" onclick="startTetris()">🟦 테트리스</button>
+            <button class="menu-button tank" onclick="startTank()">🚗 탱크 게임</button>
+        </div>
+        
+        <!-- 테트리스 게임 화면 -->
+        <div class="game-screen" id="tetris-screen">
+            <h2>🟦 테트리스</h2>
+            <button class="back-button" onclick="showMenu()">← 메뉴로</button>
+            <div class="game-info">
+                <div class="info-item">점수: <span id="tetris-score">0</span></div>
+                <div class="info-item">레벨: <span id="tetris-level">1</span></div>
+                <div class="info-item">줄: <span id="tetris-lines">0</span></div>
+            </div>
+            <canvas id="tetris-canvas" width="300" height="600"></canvas>
+            <div class="controls">
+                <p>← → : 이동 | ↓ : 빠른 낙하 | ↑ : 회전 | 스페이스 : 즉시 낙하</p>
+            </div>
+        </div>
+        
+        <!-- 탱크 게임 화면 -->
+        <div class="game-screen" id="tank-screen">
+            <h2>🚗 탱크 게임</h2>
+            <button class="back-button" onclick="showMenu()">← 메뉴로</button>
+            <div class="game-info">
+                <div class="info-item">점수: <span id="tank-score">0</span></div>
+                <div class="info-item">파워: <span id="tank-power">1</span></div>
+                <div class="info-item">체력: <span id="tank-health">100</span></div>
+            </div>
+            <div class="health-bar">
+                <div class="health-fill" id="health-fill" style="width: 100%;"></div>
+            </div>
+            <canvas id="tank-canvas" width="800" height="600"></canvas>
+            <div class="controls">
+                <p>← → : 이동 | 마우스 : 조준 및 발사</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 게임 상태 관리
+        let currentGame = null;
+        
+        // 메뉴 표시
+        function showMenu() {
+            document.getElementById('menu').style.display = 'block';
+            document.getElementById('tetris-screen').style.display = 'none';
+            document.getElementById('tank-screen').style.display = 'none';
+            
+            if (currentGame) {
+                currentGame.stop();
+                currentGame = null;
+            }
+        }
+        
+        // 테트리스 시작
+        function startTetris() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('tetris-screen').style.display = 'block';
+            currentGame = new TetrisGame();
+        }
+        
+        // 탱크 게임 시작
+        function startTank() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('tank-screen').style.display = 'block';
+            currentGame = new TankGame();
+        }
+        
+        // 테트리스 게임 클래스
+        class TetrisGame {
+            constructor() {
+                this.canvas = document.getElementById('tetris-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.grid = Array(20).fill().map(() => Array(10).fill(0));
+                this.score = 0;
+                this.level = 1;
+                this.lines = 0;
+                this.currentPiece = null;
+                this.nextPiece = null;
+                this.dropTime = 0;
+                this.dropInterval = 500;
+                this.lastTime = 0;
+                this.running = true;
+                
+                this.pieces = [
+                    { shape: [[1,1,1,1]], color: '#00FFFF' }, // I
+                    { shape: [[1,1],[1,1]], color: '#FFFF00' }, // O
+                    { shape: [[0,1,0],[1,1,1]], color: '#800080' }, // T
+                    { shape: [[0,1,1],[1,1,0]], color: '#00FF00' }, // S
+                    { shape: [[1,1,0],[0,1,1]], color: '#FF0000' }, // Z
+                    { shape: [[1,0,0],[1,1,1]], color: '#FF7F00' }, // L
+                    { shape: [[0,0,1],[1,1,1]], color: '#0000FF' }  // J
+                ];
+                
+                this.init();
+                this.gameLoop();
+            }
+            
+            init() {
+                document.addEventListener('keydown', this.handleInput.bind(this));
+                this.spawnPiece();
+                this.updateDisplay();
+            }
+            
+            spawnPiece() {
+                if (!this.nextPiece) {
+                    this.nextPiece = this.pieces[Math.floor(Math.random() * this.pieces.length)];
+                }
+                
+                this.currentPiece = {
+                    ...this.nextPiece,
+                    x: 4,
+                    y: 0
+                };
+                
+                this.nextPiece = this.pieces[Math.floor(Math.random() * this.pieces.length)];
+                
+                if (this.checkCollision()) {
+                    this.gameOver();
+                }
+            }
+            
+            handleInput(e) {
+                if (!this.running) return;
+                
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        this.movePiece(-1, 0);
+                        break;
+                    case 'ArrowRight':
+                        this.movePiece(1, 0);
+                        break;
+                    case 'ArrowDown':
+                        this.movePiece(0, 1);
+                        break;
+                    case 'ArrowUp':
+                        this.rotatePiece();
+                        break;
+                    case ' ':
+                        this.hardDrop();
+                        break;
+                }
+            }
+            
+            movePiece(dx, dy) {
+                this.currentPiece.x += dx;
+                this.currentPiece.y += dy;
+                
+                if (this.checkCollision()) {
+                    this.currentPiece.x -= dx;
+                    this.currentPiece.y -= dy;
+                    
+                    if (dy > 0) {
+                        this.placePiece();
+                    }
+                }
+            }
+            
+            rotatePiece() {
+                const originalShape = this.currentPiece.shape;
+                this.currentPiece.shape = this.rotateMatrix(originalShape);
+                
+                if (this.checkCollision()) {
+                    this.currentPiece.shape = originalShape;
+                }
+            }
+            
+            rotateMatrix(matrix) {
+                const N = matrix.length;
+                const rotated = Array(N).fill().map(() => Array(N).fill(0));
+                
+                for (let i = 0; i < N; i++) {
+                    for (let j = 0; j < N; j++) {
+                        rotated[j][N - 1 - i] = matrix[i][j];
+                    }
+                }
+                
+                return rotated;
+            }
+            
+            hardDrop() {
+                while (!this.checkCollision()) {
+                    this.currentPiece.y++;
+                }
+                this.currentPiece.y--;
+                this.placePiece();
+            }
+            
+            checkCollision() {
+                for (let y = 0; y < this.currentPiece.shape.length; y++) {
+                    for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                        if (this.currentPiece.shape[y][x]) {
+                            const newX = this.currentPiece.x + x;
+                            const newY = this.currentPiece.y + y;
+                            
+                            if (newX < 0 || newX >= 10 || newY >= 20) {
+                                return true;
+                            }
+                            
+                            if (newY >= 0 && this.grid[newY][newX]) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            placePiece() {
+                for (let y = 0; y < this.currentPiece.shape.length; y++) {
+                    for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                        if (this.currentPiece.shape[y][x]) {
+                            const gridY = this.currentPiece.y + y;
+                            const gridX = this.currentPiece.x + x;
+                            
+                            if (gridY >= 0) {
+                                this.grid[gridY][gridX] = this.currentPiece.color;
+                            }
+                        }
+                    }
+                }
+                
+                this.clearLines();
+                this.spawnPiece();
+            }
+            
+            clearLines() {
+                let linesCleared = 0;
+                
+                for (let y = this.grid.length - 1; y >= 0; y--) {
+                    if (this.grid[y].every(cell => cell !== 0)) {
+                        this.grid.splice(y, 1);
+                        this.grid.unshift(Array(10).fill(0));
+                        linesCleared++;
+                        y++; // 같은 줄을 다시 확인
+                        
+                        // 띠리리링 소리 재생
+                        this.playLineClearSound();
+                    }
+                }
+                
+                if (linesCleared > 0) {
+                    this.lines += linesCleared;
+                    this.score += linesCleared * 100 * this.level;
+                    this.level = Math.floor(this.lines / 10) + 1;
+                    this.dropInterval = Math.max(50, 500 - (this.level - 1) * 50);
+                    this.updateDisplay();
+                }
+            }
+            
+            playLineClearSound() {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // 띠리리링 멜로디
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C (한 옥타브 위)
+                let noteIndex = 0;
+                
+                const playNote = () => {
+                    if (noteIndex < notes.length) {
+                        oscillator.frequency.setValueAtTime(notes[noteIndex], audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                        noteIndex++;
+                        setTimeout(playNote, 100);
+                    }
+                };
+                
+                oscillator.start();
+                playNote();
+                setTimeout(() => oscillator.stop(), 800);
+            }
+            
+            updateDisplay() {
+                document.getElementById('tetris-score').textContent = this.score;
+                document.getElementById('tetris-level').textContent = this.level;
+                document.getElementById('tetris-lines').textContent = this.lines;
+            }
+            
+            gameLoop(time = 0) {
+                if (!this.running) return;
+                
+                const deltaTime = time - this.lastTime;
+                this.lastTime = time;
+                this.dropTime += deltaTime;
+                
+                if (this.dropTime > this.dropInterval) {
+                    this.movePiece(0, 1);
+                    this.dropTime = 0;
+                }
+                
+                this.draw();
+                requestAnimationFrame(this.gameLoop.bind(this));
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 그리드 그리기
+                for (let y = 0; y < this.grid.length; y++) {
+                    for (let x = 0; x < this.grid[y].length; x++) {
+                        if (this.grid[y][x]) {
+                            this.ctx.fillStyle = this.grid[y][x];
+                            this.ctx.fillRect(x * 30, y * 30, 30, 30);
+                            this.ctx.strokeStyle = '#fff';
+                            this.ctx.strokeRect(x * 30, y * 30, 30, 30);
+                        }
+                    }
+                }
+                
+                // 현재 피스 그리기
+                if (this.currentPiece) {
+                    this.ctx.fillStyle = this.currentPiece.color;
+                    for (let y = 0; y < this.currentPiece.shape.length; y++) {
+                        for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                            if (this.currentPiece.shape[y][x]) {
+                                const drawX = (this.currentPiece.x + x) * 30;
+                                const drawY = (this.currentPiece.y + y) * 30;
+                                this.ctx.fillRect(drawX, drawY, 30, 30);
+                                this.ctx.strokeStyle = '#fff';
+                                this.ctx.strokeRect(drawX, drawY, 30, 30);
+                            }
+                        }
+                    }
+                }
+                
+                // 그리드 라인 그리기
+                this.ctx.strokeStyle = '#333';
+                for (let i = 0; i <= 10; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i * 30, 0);
+                    this.ctx.lineTo(i * 30, 600);
+                    this.ctx.stroke();
+                }
+                for (let i = 0; i <= 20; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, i * 30);
+                    this.ctx.lineTo(300, i * 30);
+                    this.ctx.stroke();
+                }
+            }
+            
+            gameOver() {
+                this.running = false;
+                alert(`게임 오버!\n점수: ${this.score}\n클리어한 줄: ${this.lines}`);
+            }
+            
+            stop() {
+                this.running = false;
+            }
+        }
+        
+        // 탱크 게임 클래스
+        class TankGame {
+            constructor() {
+                this.canvas = document.getElementById('tank-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.player = {
+                    x: this.canvas.width / 2,
+                    y: this.canvas.height - 60,
+                    width: 60,
+                    height: 40,
+                    health: 100,
+                    maxHealth: 100,
+                    power: 1
+                };
+                this.bullets = [];
+                this.enemies = [];
+                this.items = [];
+                this.score = 0;
+                this.running = true;
+                this.keys = {};
+                this.mouse = { x: 0, y: 0 };
+                this.lastItemTime = 0;
+                this.itemInterval = 60000; // 1분 = 60000ms
+                
+                this.init();
+                this.gameLoop();
+            }
+            
+            init() {
+                document.addEventListener('keydown', (e) => this.keys[e.key] = true);
+                document.addEventListener('keyup', (e) => this.keys[e.key] = false);
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mouse.x = e.clientX - rect.left;
+                    this.mouse.y = e.clientY - rect.top;
+                });
+                this.canvas.addEventListener('click', () => this.shoot());
+                
+                // 자동 발사 시작
+                setInterval(() => {
+                    if (this.running) this.shoot();
+                }, 200);
+                
+                // 적 생성
+                setInterval(() => {
+                    if (this.running) this.spawnEnemy();
+                }, 2000);
+                
+                this.updateDisplay();
+            }
+            
+            spawnEnemy() {
+                this.enemies.push({
+                    x: Math.random() * (this.canvas.width - 40),
+                    y: -40,
+                    width: 40,
+                    height: 30,
+                    speed: 1 + Math.random() * 2,
+                    health: 1
+                });
+            }
+            
+            spawnItem() {
+                const itemType = Math.random() < 0.5 ? 'health' : 'power';
+                this.items.push({
+                    x: Math.random() * (this.canvas.width - 30),
+                    y: -30,
+                    width: 30,
+                    height: 30,
+                    type: itemType,
+                    speed: 2
+                });
+            }
+            
+            shoot() {
+                const angle = Math.atan2(this.mouse.y - this.player.y, this.mouse.x - this.player.x);
+                const bulletCount = this.player.power;
+                const spreadAngle = Math.PI / 6; // 30도
+                
+                for (let i = 0; i < bulletCount; i++) {
+                    let bulletAngle = angle;
+                    if (bulletCount > 1) {
+                        bulletAngle = angle - spreadAngle/2 + (spreadAngle / (bulletCount - 1)) * i;
+                    }
+                    
+                    this.bullets.push({
+                        x: this.player.x + this.player.width / 2,
+                        y: this.player.y,
+                        width: 4,
+                        height: 8,
+                        speed: 8,
+                        angle: bulletAngle,
+                        dx: Math.cos(bulletAngle) * 8,
+                        dy: Math.sin(bulletAngle) * 8
+                    });
+                }
+            }
+            
+            update() {
+                // 플레이어 이동
+                if (this.keys['ArrowLeft'] && this.player.x > 0) {
+                    this.player.x -= 5;
+                }
+                if (this.keys['ArrowRight'] && this.player.x < this.canvas.width - this.player.width) {
+                    this.player.x += 5;
+                }
+                
+                // 총알 업데이트
+                this.bullets = this.bullets.filter(bullet => {
+                    bullet.x += bullet.dx;
+                    bullet.y += bullet.dy;
+                    return bullet.x > 0 && bullet.x < this.canvas.width && 
+                           bullet.y > 0 && bullet.y < this.canvas.height;
+                });
+                
+                // 적 업데이트
+                this.enemies = this.enemies.filter(enemy => {
+                    enemy.y += enemy.speed;
+                    
+                    // 플레이어와 충돌 체크
+                    if (this.checkCollision(enemy, this.player)) {
+                        this.player.health -= 20;
+                        this.updateDisplay();
+                        if (this.player.health <= 0) {
+                            this.gameOver();
+                        }
+                        return false;
+                    }
+                    
+                    return enemy.y < this.canvas.height;
+                });
+                
+                // 아이템 업데이트
+                const currentTime = Date.now();
+                if (currentTime - this.lastItemTime > this.itemInterval) {
+                    this.spawnItem();
+                    this.lastItemTime = currentTime;
+                }
+                
+                this.items = this.items.filter(item => {
+                    item.y += item.speed;
+                    
+                    // 플레이어와 충돌 체크
+                    if (this.checkCollision(item, this.player)) {
+                        if (item.type === 'health') {
+                            this.player.health = Math.min(this.player.maxHealth, this.player.health + 40);
+                        } else if (item.type === 'power') {
+                            this.player.power = Math.min(5, this.player.power + 1);
+                        }
+                        this.updateDisplay();
+                        return false;
+                    }
+                    
+                    return item.y < this.canvas.height;
+                });
+                
+                // 총알과 적 충돌 체크
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    for (let j = this.enemies.length - 1; j >= 0; j--) {
+                        if (this.checkCollision(this.bullets[i], this.enemies[j])) {
+                            this.enemies.splice(j, 1);
+                            this.bullets.splice(i, 1);
+                            this.score += 10;
+                            this.updateDisplay();
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            checkCollision(obj1, obj2) {
+                return obj1.x < obj2.x + obj2.width &&
+                       obj1.x + obj1.width > obj2.x &&
+                       obj1.y < obj2.y + obj2.height &&
+                       obj1.y + obj1.height > obj2.y;
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 배경 그라데이션
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, '#001122');
+                gradient.addColorStop(1, '#003366');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 플레이어 그리기 (탱크)
+                this.ctx.fillStyle = '#00FF00';
+                this.ctx.fillRect(this.player.x, this.player.y, this.player.width, this.player.height);
+                
+                // 탱크 포신 그리기
+                this.ctx.strokeStyle = '#00AA00';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.player.x + this.player.width/2, this.player.y);
+                this.ctx.lineTo(this.player.x + this.player.width/2, this.player.y - 20);
+                this.ctx.stroke();
+                
+                // 총알 그리기
+                this.ctx.fillStyle = '#FFFF00';
+                this.bullets.forEach(bullet => {
+                    this.ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                });
+                
+                // 적 그리기 (탱크)
+                this.ctx.fillStyle = '#FF0000';
+                this.enemies.forEach(enemy => {
+                    this.ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                });
+                
+                // 아이템 그리기
+                this.items.forEach(item => {
+                    if (item.type === 'health') {
+                        this.ctx.fillStyle = '#FF69B4';
+                        this.ctx.fillRect(item.x, item.y, item.width, item.height);
+                        this.ctx.fillStyle = '#FFF';
+                        this.ctx.font = '16px Arial';
+                        this.ctx.fillText('H', item.x + 8, item.y + 20);
+                    } else if (item.type === 'power') {
+                        this.ctx.fillStyle = '#FFD700';
+                        this.ctx.fillRect(item.x, item.y, item.width, item.height);
+                        this.ctx.fillStyle = '#FFF';
+                        this.ctx.font = '16px Arial';
+                        this.ctx.fillText('P', item.x + 8, item.y + 20);
+                    }
+                });
+            }
+            
+            updateDisplay() {
+                document.getElementById('tank-score').textContent = this.score;
+                document.getElementById('tank-power').textContent = this.player.power;
+                document.getElementById('tank-health').textContent = this.player.health;
+                
+                const healthPercent = (this.player.health / this.player.maxHealth) * 100;
+                document.getElementById('health-fill').style.width = healthPercent + '%';
+            }
+            
+            gameLoop() {
+                if (!this.running) return;
+                
+                this.update();
+                this.draw();
+                requestAnimationFrame(this.gameLoop.bind(this));
+            }
+            
+            gameOver() {
+                this.running = false;
+                alert(`게임 오버!\n점수: ${this.score}`);
+            }
+            
+            stop() {
+                this.running = false;
+            }
+        }
+    </script>
+</body>
+</html>
